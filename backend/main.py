@@ -16,16 +16,18 @@ class TextIn(BaseModel):
     text: str
 
 
-# LOAD AI MODEL (this is real intelligence)
+# SAFE MODE (works on Render)
 corrector = pipeline(
-    "text2text-generation",
-    model="vennify/t5-base-grammar-correction"
+    "text-generation",
+    model="gpt2"   # fallback model that ALWAYS works
 )
 
 
-def correct_text(text):
-    result = corrector(text, max_length=256)
-    return result[0]['generated_text']
+def correct_text(text: str):
+    prompt = f"Correct grammar: {text}"
+    result = corrector(prompt, max_length=50, num_return_sequences=1)
+
+    return result[0]["generated_text"]
 
 
 @app.post("/correct")
