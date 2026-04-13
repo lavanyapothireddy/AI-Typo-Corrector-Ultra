@@ -1,83 +1,57 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import language_tool_python
+import re
 
-# -----------------------
-# APP INITIALIZATION
-# -----------------------
 app = FastAPI()
 
-# -----------------------
-# CORS FIX (IMPORTANT)
-# -----------------------
+# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # allow frontend (5500, 3000, etc.)
-    allow_credentials=True,
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# -----------------------
-# NLP ENGINE
-# -----------------------
-tool = language_tool_python.LanguageTool("en-US")
-
-# -----------------------
-# REQUEST MODEL (clean structure)
-# -----------------------
 class TextRequest(BaseModel):
     text: str
 
-# -----------------------
-# ROUTES
-# -----------------------
+
+FIXES = {
+    "dont": "don't",
+    "wont": "won't",
+    "cant": "can't",
+    "im": "I'm",
+    "teh": "the",
+    "adn": "and",
+    "recieve": "receive",
+    "definately": "definitely",
+}
+
+
+def correct(text: str):
+    text = re.sub(r"\s+", " ", text).strip()
+
+    words = text.split()
+    result = []
+
+    for w in words:
+        result.append(FIXES.get(w.lower(), w))
+
+    return " ".join(result)
+
 
 @app.get("/")
 def home():
-    return {
-        "message": "AI Typo Corrector Ultra API is running"
-    }
+    return {"status": "AI Typo Corrector Running"}
 
 
 @app.post("/correct")
 def correct_text(req: TextRequest):
-    text = req.text
+    if not req.text:
+        return {"error": "Empty text"}
 
-    if not text.strip():
-        return {
-            "error": "Empty text provided"
-        }
-
-    # -----------------------
-    # ERROR DETECTION
-    # -----------------------
-    matches = tool.check(text)
-
-    # -----------------------
-    # CORRECTION
-    # -----------------------
-    corrected_text = language_tool_python.utils.correct(text, matches)
-
-    # -----------------------
-    # OPTIONAL: ERROR DETAILS
-    # -----------------------
-    issues = []
-    for m in matches:
-        issues.append({
-            "message": m.message,
-            "offset": m.offset,
-            "length": m.errorLength,
-            "suggestions": m.replacements[:3]
-        })
-
-    # -----------------------
-    # RESPONSE
-    # -----------------------
     return {
-        "original": text,
-        "corrected": corrected_text,
-        "issues_count": len(matches),
-        "issues": issues
+        "original": req.text,
+        "corrected": correct(req.text)
     }
