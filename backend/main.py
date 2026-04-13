@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from textblob import TextBlob
+from transformers import pipeline
 
 app = FastAPI()
 
@@ -16,44 +16,21 @@ class TextIn(BaseModel):
     text: str
 
 
-# ------------------ SMART CORRECTION ------------------
-def correct_text(text: str):
-
-    # slang dictionary (YOU CAN EXPAND THIS)
-    slang = {
-        "schl": "school",
-        "englih": "english",
-        "touh": "tough",
-        "anguage": "language",
-        "pyhton": "python",
-        "poplr": "popular"
-    }
-
-    words = text.split()
-    fixed_words = []
-
-    for w in words:
-        fixed_words.append(slang.get(w.lower(), w))
-
-    cleaned = " ".join(fixed_words)
-
-    # grammar correction layer
-    blob = TextBlob(cleaned)
-    return str(blob.correct())
+# LOAD AI MODEL (this is real intelligence)
+corrector = pipeline(
+    "text2text-generation",
+    model="vennify/t5-base-grammar-correction"
+)
 
 
-# ------------------ API ------------------
+def correct_text(text):
+    result = corrector(text, max_length=256)
+    return result[0]['generated_text']
+
+
 @app.post("/correct")
 def correct(data: TextIn):
-
-    corrected = correct_text(data.text)
-
     return {
         "original": data.text,
-        "corrected": corrected
+        "corrected": correct_text(data.text)
     }
-
-
-@app.get("/")
-def home():
-    return {"status": "running"}
