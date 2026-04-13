@@ -1,11 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import re
+from textblob import TextBlob
 
 app = FastAPI()
 
-# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -13,45 +12,48 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class TextRequest(BaseModel):
+class TextIn(BaseModel):
     text: str
 
 
-FIXES = {
-    "dont": "don't",
-    "wont": "won't",
-    "cant": "can't",
-    "im": "I'm",
-    "teh": "the",
-    "adn": "and",
-    "recieve": "receive",
-    "definately": "definitely",
-}
+# ------------------ SMART CORRECTION ------------------
+def correct_text(text: str):
 
-
-def correct(text: str):
-    text = re.sub(r"\s+", " ", text).strip()
+    # slang dictionary (YOU CAN EXPAND THIS)
+    slang = {
+        "schl": "school",
+        "englih": "english",
+        "touh": "tough",
+        "anguage": "language",
+        "pyhton": "python",
+        "poplr": "popular"
+    }
 
     words = text.split()
-    result = []
+    fixed_words = []
 
     for w in words:
-        result.append(FIXES.get(w.lower(), w))
+        fixed_words.append(slang.get(w.lower(), w))
 
-    return " ".join(result)
+    cleaned = " ".join(fixed_words)
+
+    # grammar correction layer
+    blob = TextBlob(cleaned)
+    return str(blob.correct())
+
+
+# ------------------ API ------------------
+@app.post("/correct")
+def correct(data: TextIn):
+
+    corrected = correct_text(data.text)
+
+    return {
+        "original": data.text,
+        "corrected": corrected
+    }
 
 
 @app.get("/")
 def home():
-    return {"status": "AI Typo Corrector Running"}
-
-
-@app.post("/correct")
-def correct_text(req: TextRequest):
-    if not req.text:
-        return {"error": "Empty text"}
-
-    return {
-        "original": req.text,
-        "corrected": correct(req.text)
-    }
+    return {"status": "running"}
