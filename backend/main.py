@@ -1,10 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from transformers import pipeline
+import language_tool_python
+import os
 
 app = FastAPI()
 
+# Allow your website to talk to the backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -13,24 +15,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Using the BASE model - smaller, faster, more stable
-print("Checking for AI Model... the first run may take a few minutes to download.")
-fixer = pipeline("text2text-generation", model="pszemraj/flan-t5-base-grammar-synthesis")
+# Initialize the tool
+tool = language_tool_python.LanguageTool('en-US')
 
 class TextIn(BaseModel):
     text: str
 
 @app.get("/")
 def home():
-    return {"status": "AI Model is running!", "message": "Visit /docs for API testing"}
+    return {"status": "Backend is running!"}
 
 @app.post("/correct")
 def correct(data: TextIn):
-    # This model likes the "grammar: " prefix to know its job
-    result = fixer(f"grammar: {data.text}", max_length=512)
-    corrected_text = result[0]['generated_text']
-
+    matches = tool.check(data.text)
+    corrected_text = language_tool_python.utils.correct(data.text, matches)
+    
     return {
         "original": data.text,
-        "corrected": corrected_text
+        "corrected": corrected_text,
+        "error_count": len(matches)
     }
