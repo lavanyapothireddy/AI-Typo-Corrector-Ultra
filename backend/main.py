@@ -14,35 +14,35 @@ app.add_middleware(
 )
 
 # Public AI Model Endpoint
-API_URL = "https://api-inference.huggingface.co/models/venmous/grammar-correction-t5"
+API_URL = "https://api-inference.huggingface.co/models/pszemraj/flan-t5-base-grammar-synthesis"
 
 class TextIn(BaseModel):
     text: str
 
 @app.get("/")
 def home():
-    return {"status": "Online"}
+    return {"status": "AI Typo Corrector Ultra Running Online"}
 
 @app.post("/correct")
 def correct(data: TextIn):
     try:
-        # 1. Send text to the AI
-        response = requests.post(API_URL, json={"inputs": data.text})
+        # Add a prefix so the AI knows to FIX the text
+        payload = {"inputs": f"gec: {data.text}"} 
+        
+        response = requests.post(API_URL, json=payload)
         result = response.json()
         
-        # 2. Safely extract the corrected text
-        # The T5 model usually returns a list like: [{"generated_text": "..."}]
         if isinstance(result, list) and len(result) > 0:
             corrected = result[0].get('generated_text', data.text)
-        elif isinstance(result, dict) and 'generated_text' in result:
-            corrected = result['generated_text']
         else:
-            corrected = data.text # Fallback to original if API fails
+            corrected = data.text
 
+        # If the AI returns the exact same thing, let's try a fallback
+        # (Sometimes the AI is too conservative)
         return {
             "original": data.text,
-            "corrected": corrected,
-            "error_count": 1 if corrected.lower() != data.text.lower() else 0
+            "corrected": corrected.strip(),
+            "error_count": 1 if corrected.strip().lower() != data.text.lower() else 0
         }
     except Exception as e:
         return {"original": data.text, "corrected": data.text, "error": str(e)}
