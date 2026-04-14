@@ -16,7 +16,7 @@ app.add_middleware(
 
 # Replace with your actual Hugging Face Token (or use Environment Variables)
 HF_TOKEN = "your_hugging_face_token_here"
-API_URL = "https://api-inference.huggingface.co/models/vennify/t5-base-grammar-correction"
+API_URL = "https://api-inference.huggingface.co/models/Psudo-Code/grammar-error-correction"
 headers = {"Authorization": f"Bearer {HF_TOKEN}"}
 
 class TextRequest(BaseModel):
@@ -28,27 +28,28 @@ def home():
 
 @app.post("/correct")
 async def correct(data: TextRequest):
-    # 'gec:' helps the T5 model understand it needs to fix grammar
+    # We add "Fix grammar: " to the start to tell the AI what its job is
     payload = {
-        "inputs": f"gec: {data.text}",
-        "parameters": {"wait_for_model": True}
+        "inputs": f"Fix grammar: {data.text}",
+        "parameters": {
+            "wait_for_model": True,
+            "max_length": 100
+        }
     }
     
-    try:
-        response = requests.post(API_URL, headers=headers, json=payload)
-        result = response.json()
-        
-        # Safely extract the corrected text
-        if isinstance(result, list) and len(result) > 0:
-            final_text = result[0].get("generated_text", data.text)
-        else:
-            final_text = data.text
-            
-    except Exception as e:
+    response = requests.post(API_URL, headers=headers, json=payload)
+    result = response.json()
+    
+    # Hugging Face models sometimes return a list of dicts or just a list
+    if isinstance(result, list) and len(result) > 0:
+        # Try to get 'generated_text', if not, just take the first string
+        final_text = result[0].get("generated_text", result[0])
+    else:
         final_text = data.text
-        print(f"Error: {e}")
 
-    # 2. FIX: We use the key "corrected" here
+    # Final cleanup: Remove the "Fix grammar: " prefix if the AI kept it
+    final_text = final_text.replace("Fix grammar: ", "").strip()
+
     return {
         "original": data.text,
         "corrected": final_text
