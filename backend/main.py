@@ -2,8 +2,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import requests
-import json
-import os
 from difflib import get_close_matches
 
 app = FastAPI()
@@ -18,47 +16,22 @@ app.add_middleware(
 class TextIn(BaseModel):
     text: str
 
-class LearnIn(BaseModel):
-    wrong: str
-    correct: str
 
-
-# 📂 LOAD SLANG DB
-DB_FILE = "slang_db.json"
-
-def load_db():
-    if not os.path.exists(DB_FILE):
-        return {}
-    with open(DB_FILE, "r") as f:
-        return json.load(f)
-
-def save_db(db):
-    with open(DB_FILE, "w") as f:
-        json.dump(db, f, indent=2)
-
-
-# 🔤 BASIC WORDS
-WORDS = ["english", "language", "school", "python", "string", "popular", "going"]
+# 🔤 SIMPLE DICTIONARY (expand this)
+WORDS = [
+    "english", "language", "school", "python",
+    "string", "popular", "going", "hello", "world"
+]
 
 
 # 🧠 SPELL CORRECTOR
-def correct_word(word, db):
-    word_lower = word.lower()
-
-    # 1. Check slang DB
-    if word_lower in db:
-        return db[word_lower]
-
-    # 2. Dictionary match
-    match = get_close_matches(word_lower, WORDS, n=1, cutoff=0.7)
-    if match:
-        return match[0]
-
-    return word
+def correct_word(word):
+    matches = get_close_matches(word.lower(), WORDS, n=1, cutoff=0.7)
+    return matches[0] if matches else word
 
 
-def spell_correct(text, db):
-    return " ".join([correct_word(w, db) for w in text.split()])
+def spell_correct(text):
+    return " ".join([correct_word(w) for w in text.split()])
 
 
 # 🤖 AI GRAMMAR
@@ -87,12 +60,13 @@ def analyze(original, corrected):
     return wrong, correct, total, score
 
 
-# 🚀 MAIN CORRECT API
 @app.post("/correct")
 def correct(data: TextIn):
-    db = load_db()
 
-    spell_fixed = spell_correct(data.text, db)
+    # STEP 1: spelling
+    spell_fixed = spell_correct(data.text)
+
+    # STEP 2: grammar
     corrected = grammar_correct(spell_fixed)
 
     wrong, correct_w, total, score = analyze(data.text, corrected)
@@ -105,15 +79,3 @@ def correct(data: TextIn):
         "total_words": total,
         "score": score
     }
-
-
-# 🧠 LEARNING API
-@app.post("/learn")
-def learn(data: LearnIn):
-    db = load_db()
-
-    db[data.wrong.lower()] = data.correct.lower()
-
-    save_db(db)
-
-    return {"message": "Learned successfully", "db": db}
