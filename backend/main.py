@@ -40,7 +40,9 @@ def correct(text: str):
 
     return final_text, wrong, total, score
 
-
+@app.get("/")
+def home():
+    return {"status": "AI Typo Corrector is Online!"}
 @app.post("/correct")
 def run(data: TextIn):
     corrected, wrong, total, score = correct(data.text)
