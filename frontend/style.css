@@ -1,75 +1,54 @@
 body {
     margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    background: linear-gradient(135deg, #1f1c2c, #928dab);
+    font-family: Arial;
+    background: #0f172a;
     color: white;
 }
 
 .app {
     padding: 20px;
-}
-
-.header {
     text-align: center;
-    margin-bottom: 20px;
-}
-
-.header h1 {
-    font-size: 32px;
-}
-
-.header p {
-    opacity: 0.8;
 }
 
 .container {
     display: flex;
     gap: 20px;
-    justify-content: center;
+    margin-top: 20px;
 }
 
 .left, .right {
-    width: 45%;
-    background: rgba(255,255,255,0.1);
+    width: 50%;
+    background: #1e293b;
     padding: 20px;
-    border-radius: 15px;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    border-radius: 10px;
 }
 
 textarea {
     width: 100%;
     height: 250px;
-    border: none;
-    border-radius: 10px;
-    padding: 15px;
-    font-size: 16px;
-    outline: none;
-    background: rgba(0,0,0,0.2);
+    background: #020617;
     color: white;
+    border: none;
+    padding: 10px;
 }
 
 button {
-    margin-top: 15px;
+    margin-top: 10px;
+    padding: 10px;
     width: 100%;
-    padding: 12px;
-    background: #00c6ff;
+    background: #3b82f6;
     border: none;
     color: white;
-    font-size: 16px;
-    border-radius: 10px;
     cursor: pointer;
-}
-
-button:hover {
-    background: #0072ff;
 }
 
 #output {
     min-height: 250px;
-    background: rgba(0,0,0,0.2);
-    padding: 15px;
-    border-radius: 10px;
-    font-size: 16px;
-    white-space: pre-wrap;
+    background: #020617;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.stats {
+    margin-top: 15px;
 }
