@@ -44,13 +44,28 @@ def correct(text: str):
 def home():
     return {"status": "AI Typo Corrector is Online!"}
 @app.post("/correct")
-def run(data: TextIn):
-    corrected, wrong, total, score = correct(data.text)
+async def correct(data: TextRequest):
+    payload = {
+        "inputs": f"grammar: {data.text}",
+        "parameters": {"wait_for_model": True} # This forces Render to wait for the AI
+    }
+    
+    response = requests.post(API_URL, headers=headers, json=payload)
+    result = response.json()
 
+    # Debug: Print this in your Render logs to see what the AI is actually saying
+    print(f"AI Response: {result}")
+
+    # Logic to extract the text safely
+    if isinstance(result, list) and len(result) > 0:
+        final_text = result[0].get("generated_text", data.text)
+    else:
+        final_text = data.text # Fallback to original text if AI fails
+
+    error_count = 1 if final_text.lower() != data.text.lower() else 0
+    
     return {
         "original": data.text,
-        "corrected": corrected,
-        "wrong_words": wrong,
-        "total_words": total,
-        "score": score
+        "corrected": final_text,
+        "error_count": error_count
     }
