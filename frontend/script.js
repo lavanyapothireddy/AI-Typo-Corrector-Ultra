@@ -3,7 +3,12 @@ async function correctText() {
     const outputDiv = document.getElementById("output");
     
     // Replace this with your actual Render URL
-    const RENDER_URL = "https://your-app-name.onrender.com/correct";
+    // Replace with YOUR specific Render address
+const res = await fetch("https://ai-typo-corrector-ultra.onrender.com/correct", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text })
+});
 
     if (!text.trim()) {
         outputDiv.innerText = "Please enter some text first!";
