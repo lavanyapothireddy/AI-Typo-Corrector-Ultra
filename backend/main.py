@@ -14,7 +14,13 @@ app.add_middleware(
 )
 
 # Public AI Model Endpoint
-API_URL = "https://api-inference.huggingface.co/models/AventIQ-AI/t5-base-grammar-correction-for-writing-assistance"
+# Use this model instead - it's much better at catching 'i am go'
+API_URL = "https://api-inference.huggingface.co/models/pszemraj/flan-t5-large-grammar-synthesis"
+
+# ... inside your correct function ...
+payload = {
+    "inputs": f"grammar: {data.text}", # Changed 'fix:' to 'grammar:'
+}
 
 class TextIn(BaseModel):
     text: str
@@ -28,7 +34,8 @@ def correct(data: TextIn):
     try:
         # We add 'fix: ' to the start of the sentence. 
         # This is the "magic word" for this AI model to start correcting.
-        payload = {"inputs": f"fix: {data.text}"} 
+        payload = { "inputs": f"grammar: {data.text}", # Changed 'fix:' to 'grammar:'
+                  }
         
         response = requests.post(API_URL, json=payload)
         result = response.json()
