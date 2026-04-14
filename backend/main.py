@@ -21,7 +21,7 @@ class TextIn(BaseModel):
 
 @app.get("/")
 def home():
-    return {"status": "Online"}
+    return {"status": " AI Typo Corrector ULtra Running"}
 
 @app.post("/correct")
 def correct(data: TextIn):
