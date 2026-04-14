@@ -1,12 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import language_tool_python
-import os
+import requests
 
 app = FastAPI()
 
-# Allow your website to talk to the backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,23 +13,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize the tool
-tool = language_tool_python.LanguageTool('en-US')
+# This uses a public API so you don't need to install Java or heavy models
+API_URL = "https://api-inference.huggingface.co/models/venmous/grammar-correction-t5"
 
 class TextIn(BaseModel):
     text: str
 
 @app.get("/")
 def home():
-    return {"status": "Backend is running!"}
+    return {"status": "Online"}
 
 @app.post("/correct")
 def correct(data: TextIn):
-    matches = tool.check(data.text)
-    corrected_text = language_tool_python.utils.correct(data.text, matches)
+    # Call the remote AI
+    response = requests.post(API_URL, json={"inputs": data.text})
+    result = response.json()
+    
+    # Extract corrected text
+    corrected = result[0]['generated_text'] if isinstance(result, list) else data.text
     
     return {
         "original": data.text,
-        "corrected": corrected_text,
-        "error_count": len(matches)
+        "corrected": corrected,
+        "error_count": 1 if corrected != data.text else 0
     }
