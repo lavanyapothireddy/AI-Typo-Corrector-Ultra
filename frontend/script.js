@@ -1,36 +1,21 @@
-async function analyzeText() {
-    // 1. Get what the user typed
-    const userInput = document.getElementById("input-text").value;
-    const outputElement = document.getElementById("output-text");
+async function analyze() {
 
-    if (!userInput) {
-        alert("Please enter some text!");
-        return;
-    }
+    const text = document.getElementById("inputText").value;
 
-    outputElement.innerText = "Analyzing...";
+    const res = await fetch("https://ai-typo-corrector-ultra.onrender.com/correct", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ text })
+    });
 
-    try {
-        // 2. Send the text to your Render Backend
-        const response = await fetch("https://ai-typo-corrector-ultra.onrender.com/correct", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ text: userInput }),
-        });
+    const data = await res.json();
 
-        // 3. Wait for the server to send the JSON answer back
-        const data = await response.json();
-        console.log("Success:", data);
+    document.getElementById("output").innerText = data.corrected;
 
-        // --- THE LINE GOES HERE ---
-        // This takes "data.corrected" from Python and puts it into your HTML div
-        outputElement.innerText = data.corrected; 
-        // ---------------------------
-
-    } catch (error) {
-        console.error("Error:", error);
-        outputElement.innerText = "Error: Could not connect to the server.";
-    }
+    document.getElementById("wrong").innerText = data.wrong_words;
+    document.getElementById("correct").innerText = data.correct_words;
+    document.getElementById("total").innerText = data.total_words;
+    document.getElementById("score").innerText = data.score;
 }
