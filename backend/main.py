@@ -21,24 +21,29 @@ API_URL = "https://api-inference.huggingface.co/models/vennify/t5-base-grammar-c
 
 def ai_correct(text):
     try:
-        response = requests.post(API_URL, json={"inputs": "grammar: " + text})
-        result = response.json()
-        return result[0]["generated_text"]
+        res = requests.post(API_URL, json={"inputs": "grammar: " + text})
+        data = res.json()
+        return data[0]["generated_text"]
     except:
         return text
 
 
 def analyze(original, corrected):
-    orig_words = original.split()
-    corr_words = corrected.split()
+    orig = original.split()
+    corr = corrected.split()
 
-    wrong = sum(1 for o, c in zip(orig_words, corr_words) if o != c)
-    total = len(orig_words)
+    wrong = sum(1 for o, c in zip(orig, corr) if o != c)
+    total = len(orig)
     correct = total - wrong
 
     score = int((correct / total) * 100) if total else 0
 
     return wrong, correct, total, score
+
+
+@app.get("/")
+def home():
+    return {"status": "running"}
 
 
 @app.post("/correct")
