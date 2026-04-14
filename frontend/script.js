@@ -11,7 +11,7 @@ async function correctText() {
 
     try {
         // REPLACE THIS URL with your actual Render URL
-        const res = await fetch("https://your-app-name.onrender.com/correct", {
+        const res = await fetch("https://ai-typo-corrector-ultra.onrender.com", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ text })
