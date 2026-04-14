@@ -13,7 +13,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# This uses a public API so you don't need to install Java or heavy models
+# Public AI Model Endpoint
 API_URL = "https://api-inference.huggingface.co/models/venmous/grammar-correction-t5"
 
 class TextIn(BaseModel):
@@ -21,19 +21,28 @@ class TextIn(BaseModel):
 
 @app.get("/")
 def home():
-    return {"status": " AI Typo Corrector ULtra Running"}
+    return {"status": "Online"}
 
 @app.post("/correct")
 def correct(data: TextIn):
-    # Call the remote AI
-    response = requests.post(API_URL, json={"inputs": data.text})
-    result = response.json()
-    
-    # Extract corrected text
-    corrected = result[0]['generated_text'] if isinstance(result, list) else data.text
-    
-    return {
-        "original": data.text,
-        "corrected": corrected,
-        "error_count": 1 if corrected != data.text else 0
-    }
+    try:
+        # 1. Send text to the AI
+        response = requests.post(API_URL, json={"inputs": data.text})
+        result = response.json()
+        
+        # 2. Safely extract the corrected text
+        # The T5 model usually returns a list like: [{"generated_text": "..."}]
+        if isinstance(result, list) and len(result) > 0:
+            corrected = result[0].get('generated_text', data.text)
+        elif isinstance(result, dict) and 'generated_text' in result:
+            corrected = result['generated_text']
+        else:
+            corrected = data.text # Fallback to original if API fails
+
+        return {
+            "original": data.text,
+            "corrected": corrected,
+            "error_count": 1 if corrected.lower() != data.text.lower() else 0
+        }
+    except Exception as e:
+        return {"original": data.text, "corrected": data.text, "error": str(e)}
