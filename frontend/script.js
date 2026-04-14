@@ -1,24 +1,17 @@
 async function correctText() {
     const text = document.getElementById("inputText").value;
     const outputDiv = document.getElementById("output");
-    
-    // Replace this with your actual Render URL
-    // Replace with YOUR specific Render address
-const res = await fetch("https://ai-typo-corrector-ultra.onrender.com/correct", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text })
-});
+    const wordCountSpan = document.getElementById("totalWords");
+    const errorCountSpan = document.getElementById("wrongWords");
+    const scoreSpan = document.getElementById("score");
 
-    if (!text.trim()) {
-        outputDiv.innerText = "Please enter some text first!";
-        return;
-    }
+    if (!text.trim()) return;
 
-    outputDiv.innerText = "Correcting...";
+    outputDiv.innerText = "AI is thinking...";
 
     try {
-        const res = await fetch(RENDER_URL, {
+        // REPLACE THIS URL with your actual Render URL
+        const res = await fetch("https://your-app-name.onrender.com/correct", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ text })
@@ -26,29 +19,20 @@ const res = await fetch("https://ai-typo-corrector-ultra.onrender.com/correct", 
 
         const data = await res.json();
 
-        // 1. Show the corrected text
+        // Update the UI
         outputDiv.innerText = data.corrected;
-
-        // 2. Calculate and display the stats
-        const words = text.trim().split(/\s+/);
-        const totalCount = words.length;
-        const errorCount = data.error_count || 0;
-        const score = Math.max(0, 100 - (errorCount * 10));
-
-        // 3. Update the HTML spans
-        document.getElementById("totalWords").innerText = `Total Words: ${totalCount}`;
-        document.getElementById("wrongWords").innerText = `Errors: ${errorCount}`;
-        document.getElementById("score").innerText = `Accuracy: ${score}%`;
         
-        // Optional: Color the score
-        document.getElementById("score").style.color = score > 80 ? "#4ade80" : "#f87171";
+        // Update Stats
+        const wordCount = text.trim().split(/\s+/).length;
+        wordCountSpan.innerText = `${wordCount} words`;
+        errorCountSpan.innerText = `${data.error_count} errors`;
+        
+        // Simple Score Logic
+        const accuracy = data.error_count === 0 ? 100 : 85;
+        scoreSpan.innerText = `${accuracy}% Accuracy`;
 
     } catch (error) {
-        console.error(error);
-        outputDiv.innerText = "Connection Error: Check if Backend is live.";
+        outputDiv.innerText = "Error: Could not reach the AI server.";
+        console.error("Fetch error:", error);
     }
-}function copyText() {
-    const text = document.getElementById("output").innerText;
-    navigator.clipboard.writeText(text);
-    alert("Corrected text copied!");
 }
