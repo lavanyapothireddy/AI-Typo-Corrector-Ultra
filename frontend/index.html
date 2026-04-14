@@ -22,6 +22,25 @@
 
             <button onclick="correctText()">Correct Text</button>
         </div>
+        <div class="container">
+  <div class="editor">
+    <textarea id="inputText" placeholder="Start typing..."></textarea>
+  </div>
+
+  <div class="result">
+    <h3>Corrected</h3>
+    <div id="output"></div>
+
+    <div class="stats">
+      <p>❌ Wrong: <span id="wrong"></span></p>
+      <p>✅ Correct: <span id="correct"></span></p>
+      <p>📊 Total: <span id="total"></span></p>
+      <p>🧠 Score: <span id="score"></span>/100</p>
+    </div>
+  </div>
+</div>
+
+<button onclick="analyze()">Analyze</button>
 
         <div class="right">
             <h3>Output</h3>
