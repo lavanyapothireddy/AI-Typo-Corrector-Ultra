@@ -1,4 +1,5 @@
 async function analyzeText() {
+    // 1. Get what the user typed
     const userInput = document.getElementById("input-text").value;
     const outputElement = document.getElementById("output-text");
 
@@ -10,25 +11,23 @@ async function analyzeText() {
     outputElement.innerText = "Analyzing...";
 
     try {
-        // REPLACE with your actual Render URL
+        // 2. Send the text to your Render Backend
         const response = await fetch("https://ai-typo-corrector-ultra.onrender.com/correct", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            // 3. FIX: Sending "text" to match the Python BaseModel
             body: JSON.stringify({ text: userInput }),
         });
 
-        if (!response.ok) {
-            throw new Error(`Server error: ${response.status}`);
-        }
-
+        // 3. Wait for the server to send the JSON answer back
         const data = await response.json();
         console.log("Success:", data);
 
-        // 4. FIX: Use data.corrected to match the Python return key
-        outputElement.innerText = data.corrected;
+        // --- THE LINE GOES HERE ---
+        // This takes "data.corrected" from Python and puts it into your HTML div
+        outputElement.innerText = data.corrected; 
+        // ---------------------------
 
     } catch (error) {
         console.error("Error:", error);
