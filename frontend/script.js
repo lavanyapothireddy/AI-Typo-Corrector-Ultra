@@ -25,8 +25,12 @@ async function correctText() {
         });
 
         const data = await response.json();
-        console.log("Success:", data);
-
+        .then(response => response.json())
+            .then(data => {
+                console.log("Success:", data);
+    // Use 'corrected' because that is what your Python return statement uses
+    document.getElementById("output-box").innerText = data.corrected; 
+})
         // 2. Update the Output Box
         outputDiv.innerText = data.corrected;
         outputDiv.style.color = "#4ade80"; // Turn green when finished
