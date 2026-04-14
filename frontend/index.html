@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AI Typo Corrector Ultra</title>
+    <title>Grammarly AI Clone</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -9,42 +9,27 @@
 
 <div class="app">
 
-    <div class="header">
-        <h1>AI Typo Corrector Ultra</h1>
-        <p>Fix grammar, spelling & improve writing instantly</p>
-    </div>
+    <h1>🧠 Grammarly AI Clone</h1>
 
     <div class="container">
 
         <div class="left">
             <h3>Input</h3>
-            <textarea id="input" placeholder="Type your text here..."></textarea>
+            <textarea id="inputText" placeholder="Type your text..."></textarea>
 
-            <button onclick="correctText()">Correct Text</button>
+            <button onclick="analyze()">Analyze</button>
         </div>
-        <div class="container">
-  <div class="editor">
-    <textarea id="inputText" placeholder="Start typing..."></textarea>
-  </div>
-
-  <div class="result">
-    <h3>Corrected</h3>
-    <div id="output"></div>
-
-    <div class="stats">
-      <p>❌ Wrong: <span id="wrong"></span></p>
-      <p>✅ Correct: <span id="correct"></span></p>
-      <p>📊 Total: <span id="total"></span></p>
-      <p>🧠 Score: <span id="score"></span>/100</p>
-    </div>
-  </div>
-</div>
-
-<button onclick="analyze()">Analyze</button>
 
         <div class="right">
-            <h3>Output</h3>
-            <div id="output">Your corrected text will appear here...</div>
+            <h3>Corrected Output</h3>
+            <div id="output"></div>
+
+            <div class="stats">
+                <p>❌ Wrong: <span id="wrong"></span></p>
+                <p>✅ Correct: <span id="correct"></span></p>
+                <p>📊 Total: <span id="total"></span></p>
+                <p>🧠 Score: <span id="score"></span>/100</p>
+            </div>
         </div>
 
     </div>
