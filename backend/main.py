@@ -16,7 +16,7 @@ app.add_middleware(
 
 # Replace with your actual Hugging Face Token (or use Environment Variables)
 HF_TOKEN = "your_hugging_face_token_here"
-API_URL = "https://api-inference.huggingface.co/models/Psudo-Code/grammar-error-correction"
+API_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-cnn"
 headers = {"Authorization": f"Bearer {HF_TOKEN}"}
 
 class TextRequest(BaseModel):
@@ -28,27 +28,30 @@ def home():
 
 @app.post("/correct")
 async def correct(data: TextRequest):
-    # We add "Fix grammar: " to the start to tell the AI what its job is
+    # We use a very clear instruction: "Fix the grammar errors in this sentence:"
+    prompt = f"Fix the grammar errors in this sentence: {data.text}"
+    
     payload = {
-        "inputs": f"Fix grammar: {data.text}",
+        "inputs": prompt,
         "parameters": {
             "wait_for_model": True,
-            "max_length": 100
+            "do_sample": False # This makes the AI more predictable/correct
         }
     }
     
     response = requests.post(API_URL, headers=headers, json=payload)
     result = response.json()
     
-    # Hugging Face models sometimes return a list of dicts or just a list
-    if isinstance(result, list) and len(result) > 0:
-        # Try to get 'generated_text', if not, just take the first string
-        final_text = result[0].get("generated_text", result[0])
-    else:
+    try:
+        if isinstance(result, list) and len(result) > 0:
+            final_text = result[0].get("summary_text", result[0].get("generated_text", data.text))
+        else:
+            final_text = data.text
+            
+        # Remove the prompt prefix if the AI repeats it
+        final_text = final_text.replace("Fix the grammar errors in this sentence:", "").strip()
+    except:
         final_text = data.text
-
-    # Final cleanup: Remove the "Fix grammar: " prefix if the AI kept it
-    final_text = final_text.replace("Fix grammar: ", "").strip()
 
     return {
         "original": data.text,
