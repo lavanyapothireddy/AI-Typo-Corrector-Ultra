@@ -1,9 +1,12 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+import requests
+import os
 
 app = FastAPI()
 
+# 1. FIX: Added CORS Middleware so the browser allows the connection
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -11,61 +14,42 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class TextIn(BaseModel):
+# Replace with your actual Hugging Face Token (or use Environment Variables)
+HF_TOKEN = "your_hugging_face_token_here"
+API_URL = "https://api-inference.huggingface.co/models/vennify/t5-base-grammar-correction"
+headers = {"Authorization": f"Bearer {HF_TOKEN}"}
+
+class TextRequest(BaseModel):
     text: str
-
-
-SLANG = {
-    "englih": "english",
-    "touh": "tough",
-    "pyhton": "python",
-    "schl": "school",
-}
-
-
-def correct(text: str):
-    words = text.split()
-    corrected = []
-    wrong = 0
-
-    for w in words:
-        fixed = SLANG.get(w.lower(), w)
-        if fixed != w:
-            wrong += 1
-        corrected.append(fixed)
-
-    final_text = " ".join(corrected)
-    total = len(words)
-    score = int(((total - wrong) / total) * 100) if total else 0
-
-    return final_text, wrong, total, score
 
 @app.get("/")
 def home():
     return {"status": "AI Typo Corrector is Online!"}
+
 @app.post("/correct")
 async def correct(data: TextRequest):
+    # 'gec:' helps the T5 model understand it needs to fix grammar
     payload = {
-        "inputs": f"grammar: {data.text}",
-        "parameters": {"wait_for_model": True} # This forces Render to wait for the AI
+        "inputs": f"gec: {data.text}",
+        "parameters": {"wait_for_model": True}
     }
     
-    response = requests.post(API_URL, headers=headers, json=payload)
-    result = response.json()
+    try:
+        response = requests.post(API_URL, headers=headers, json=payload)
+        result = response.json()
+        
+        # Safely extract the corrected text
+        if isinstance(result, list) and len(result) > 0:
+            final_text = result[0].get("generated_text", data.text)
+        else:
+            final_text = data.text
+            
+    except Exception as e:
+        final_text = data.text
+        print(f"Error: {e}")
 
-    # Debug: Print this in your Render logs to see what the AI is actually saying
-    print(f"AI Response: {result}")
-
-    # Logic to extract the text safely
-    if isinstance(result, list) and len(result) > 0:
-        final_text = result[0].get("generated_text", data.text)
-    else:
-        final_text = data.text # Fallback to original text if AI fails
-
-    error_count = 1 if final_text.lower() != data.text.lower() else 0
-    
+    # 2. FIX: We use the key "corrected" here
     return {
         "original": data.text,
-        "corrected": final_text,
-        "error_count": error_count
+        "corrected": final_text
     }
