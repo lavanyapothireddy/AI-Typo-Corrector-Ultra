@@ -1,12 +1,10 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 import requests
-import os
 
 app = FastAPI()
 
-# 1. FIX: Added CORS Middleware so the browser allows the connection
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -14,46 +12,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Replace with your actual Hugging Face Token (or use Environment Variables)
-HF_TOKEN = "your_hugging_face_token_here"
-API_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-cnn"
-headers = {"Authorization": f"Bearer {HF_TOKEN}"}
-
-class TextRequest(BaseModel):
+class TextIn(BaseModel):
     text: str
 
-@app.get("/")
-def home():
-    return {"status": "AI Typo Corrector is Online!"}
+
+API_URL = "https://api-inference.huggingface.co/models/vennify/t5-base-grammar-correction"
+
 
 @app.post("/correct")
-async def correct(data: TextRequest):
-    # We use a very clear instruction: "Fix the grammar errors in this sentence:"
-    prompt = f"Fix the grammar errors in this sentence: {data.text}"
-    
+def correct(data: TextIn):
+
     payload = {
-        "inputs": prompt,
-        "parameters": {
-            "wait_for_model": True,
-            "do_sample": False # This makes the AI more predictable/correct
-        }
+        "inputs": "grammar: " + data.text
     }
-    
-    response = requests.post(API_URL, headers=headers, json=payload)
+
+    response = requests.post(API_URL, json=payload)
     result = response.json()
-    
+
     try:
-        if isinstance(result, list) and len(result) > 0:
-            final_text = result[0].get("summary_text", result[0].get("generated_text", data.text))
-        else:
-            final_text = data.text
-            
-        # Remove the prompt prefix if the AI repeats it
-        final_text = final_text.replace("Fix the grammar errors in this sentence:", "").strip()
+        corrected = result[0]["generated_text"]
     except:
-        final_text = data.text
+        corrected = data.text
 
     return {
         "original": data.text,
-        "corrected": final_text
+        "corrected": corrected
     }
