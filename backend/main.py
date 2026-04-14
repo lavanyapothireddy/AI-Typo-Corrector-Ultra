@@ -26,19 +26,26 @@ def home():
 @app.post("/correct")
 def correct(data: TextIn):
     try:
-        # Add a prefix so the AI knows to FIX the text
-        payload = {"inputs": f"gec: {data.text}"} 
+        # We add a specific instruction prefix so the AI knows its job
+        payload = {
+            "inputs": f"render corrected text: {data.text}",
+            "parameters": {"top_p": 0.9, "temperature": 0.1} # Makes the AI more focused
+        }
         
         response = requests.post(API_URL, json=payload)
         result = response.json()
         
+        # Log the result to Render logs so you can see it
+        print(f"AI Result: {result}")
+
         if isinstance(result, list) and len(result) > 0:
             corrected = result[0].get('generated_text', data.text)
+        elif isinstance(result, dict) and 'generated_text' in result:
+            corrected = result['generated_text']
         else:
             corrected = data.text
 
-        # If the AI returns the exact same thing, let's try a fallback
-        # (Sometimes the AI is too conservative)
+        # Return the response
         return {
             "original": data.text,
             "corrected": corrected.strip(),
