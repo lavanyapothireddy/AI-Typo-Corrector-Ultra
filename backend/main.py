@@ -14,7 +14,7 @@ app.add_middleware(
 )
 
 # Public AI Model Endpoint
-API_URL = "https://api-inference.huggingface.co/models/pszemraj/flan-t5-base-grammar-synthesis"
+API_URL = "https://api-inference.huggingface.co/models/AventIQ-AI/t5-base-grammar-correction-for-writing-assistance"
 
 class TextIn(BaseModel):
     text: str
@@ -26,30 +26,28 @@ def home():
 @app.post("/correct")
 def correct(data: TextIn):
     try:
-        # We add a specific instruction prefix so the AI knows its job
-        payload = {
-            "inputs": f"render corrected text: {data.text}",
-            "parameters": {"top_p": 0.9, "temperature": 0.1} # Makes the AI more focused
-        }
+        # We add 'fix: ' to the start of the sentence. 
+        # This is the "magic word" for this AI model to start correcting.
+        payload = {"inputs": f"fix: {data.text}"} 
         
         response = requests.post(API_URL, json=payload)
         result = response.json()
         
-        # Log the result to Render logs so you can see it
-        print(f"AI Result: {result}")
+        # Log the AI's raw thoughts to your Render terminal
+        print(f"AI response: {result}")
 
         if isinstance(result, list) and len(result) > 0:
             corrected = result[0].get('generated_text', data.text)
-        elif isinstance(result, dict) and 'generated_text' in result:
-            corrected = result['generated_text']
         else:
             corrected = data.text
 
-        # Return the response
+        # Clean up the output (remove the AI's prefix if it adds one)
+        final_text = corrected.replace("fix: ", "").strip()
+
         return {
             "original": data.text,
-            "corrected": corrected.strip(),
-            "error_count": 1 if corrected.strip().lower() != data.text.lower() else 0
+            "corrected": final_text,
+            "error_count": 1 if final_text.lower() != data.text.lower() else 0
         }
     except Exception as e:
         return {"original": data.text, "corrected": data.text, "error": str(e)}
