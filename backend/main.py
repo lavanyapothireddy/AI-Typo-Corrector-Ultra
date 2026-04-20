@@ -1,10 +1,11 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from textblob import TextBlob
 
 app = FastAPI()
 
-# ✅ FIX CORS (VERY IMPORTANT)
+# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -26,9 +27,11 @@ def home():
 def correct_text(data: TextIn):
     text = data.text
 
-    # Simple correction (no predefined AI)
-    corrected = text.capitalize()
+    # ✅ REAL correction using TextBlob
+    blob = TextBlob(text)
+    corrected = str(blob.correct())
 
+    # scoring
     words = text.split()
     corrected_words = corrected.split()
 
