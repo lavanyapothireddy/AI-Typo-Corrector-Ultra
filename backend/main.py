@@ -6,7 +6,7 @@ import difflib
 
 app = FastAPI()
 
-# CORS
+# CORS FIX
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,9 +15,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 🔥 Better AI model
+# ✅ FIXED PIPELINE (IMPORTANT CHANGE)
 corrector = pipeline(
-    "text2text-generation",
+    "text-generation",
     model="pszemraj/flan-t5-large-grammar-synthesis"
 )
 
@@ -34,14 +34,25 @@ def home():
 def correct_text(data: TextIn):
     text = data.text
 
-    # AI correction
-    result = corrector(text, max_length=128)
-    corrected = result[0]["generated_text"]
+    # 🔥 Generate output
+    result = corrector(
+        text,
+        max_length=128,
+        do_sample=False
+    )
 
-    # Capitalize
+    generated = result[0]["generated_text"]
+
+    # 🔥 CLEAN OUTPUT (VERY IMPORTANT)
+    corrected = generated.replace(text, "").strip()
+
+    if not corrected:
+        corrected = text
+
+    # Capitalize first letter
     corrected = corrected[:1].upper() + corrected[1:]
 
-    # 🔥 SMART scoring (similarity)
+    # 🔥 Better scoring
     similarity = difflib.SequenceMatcher(None, text, corrected).ratio()
     score = int(similarity * 100)
 
