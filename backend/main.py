@@ -1,34 +1,47 @@
-async function checkGrammar() {
-    const text = document.getElementById("inputText").value;
-    const output = document.getElementById("output");
-    const scoreBox = document.getElementById("score");
+from fastapi import FastAPI
+from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 
-    if (!text.trim()) {
-        alert("Please enter text");
-        return;
+app = FastAPI()
+
+# ✅ FIX CORS (VERY IMPORTANT)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+class TextIn(BaseModel):
+    text: str
+
+
+@app.get("/")
+def home():
+    return {"message": "Backend running 🚀"}
+
+
+@app.post("/correct")
+def correct_text(data: TextIn):
+    text = data.text
+
+    # Simple correction (no predefined AI)
+    corrected = text.capitalize()
+
+    words = text.split()
+    corrected_words = corrected.split()
+
+    correct_count = sum(1 for a, b in zip(words, corrected_words) if a == b)
+    total = len(words)
+    wrong = total - correct_count
+    score = int((correct_count / total) * 100) if total > 0 else 0
+
+    return {
+        "original": text,
+        "corrected": corrected,
+        "wrong_words": wrong,
+        "correct_words": correct_count,
+        "total_words": total,
+        "score": score
     }
-
-    output.innerText = "Checking...";
-    scoreBox.innerText = "";
-
-    try {
-        const response = await fetch("https://ai-typo-corrector-ultra.onrender.com/correct", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ text: text })
-        });
-
-        const data = await response.json();
-
-        console.log(data); // debug
-
-        output.innerText = data.corrected;
-        scoreBox.innerText = `Score: ${data.score}/100`;
-
-    } catch (error) {
-        console.error(error);
-        output.innerText = "❌ Backend not responding";
-    }
-}
