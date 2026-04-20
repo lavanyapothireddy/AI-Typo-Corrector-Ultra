@@ -1,110 +1,76 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-import difflib
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# -----------------------------
-# Input Schema
-# -----------------------------
+# CORS (IMPORTANT)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 class TextIn(BaseModel):
     text: str
 
-# -----------------------------
-# Vocabulary
-# -----------------------------
-WORD_LIST = set([
-    "i","am","is","are","he","she","it","we","they",
-    "go","goes","going","went","like","likes","love",
-    "school","apple","apples","eat","eating",
-    "play","playing","run","running",
-    "to","from","in","on","at","with",
-    "this","that","these","those",
-    "good","bad","fast","slow",
-    "you","your","my","our",
-    "do","does","did","don't","doesn't"
-])
 
-# -----------------------------
-# Spell correction
-# -----------------------------
-def correct_word(word):
-    matches = difflib.get_close_matches(word, WORD_LIST, n=1, cutoff=0.7)
-    return matches[0] if matches else word
+def simple_correct(text: str):
+    corrections = {
+        "dont": "don't",
+        "doesnt": "doesn't",
+        "cant": "can't",
+        "wont": "won't",
+        "im": "I'm",
+        "i": "I",
+        "schol": "school",
+        "spedd": "speed",
+        "rotatin": "rotating"
+    }
 
-# -----------------------------
-# Grammar rules (FIXED)
-# -----------------------------
-def grammar_fix(words):
-    result = []
-
-    for i, w in enumerate(words):
-
-        prev = words[i-1] if i > 0 else ""
-
-        # FIX 1: he/she/it + don't → doesn't
-        if w in ["dont", "don't"]:
-            if prev in ["he", "she", "it"]:
-                result.append("doesn't")
-            else:
-                result.append("don't")
-            continue
-
-        # FIX 2: he/she/it + go → goes
-        if w == "go" and prev in ["he", "she", "it"]:
-            result.append("goes")
-            continue
-
-        # FIX 3: i am go → i am going
-        if w == "go" and i > 1 and words[i-2] == "i" and words[i-1] == "am":
-            result.append("going")
-            continue
-
-        # FIX 4: like apple → apples
-        if w == "apple" and prev == "like":
-            result.append("apples")
-            continue
-
-        result.append(w)
-
-    return result
-
-# -----------------------------
-# Main processing
-# -----------------------------
-def process_text(text):
-    words = text.lower().split()
-
+    words = text.split()
     corrected_words = []
     wrong = 0
 
     for w in words:
-        new_w = correct_word(w)
-        if new_w != w:
+        lw = w.lower()
+        if lw in corrections:
+            corrected_words.append(corrections[lw])
             wrong += 1
-        corrected_words.append(new_w)
+        else:
+            corrected_words.append(w)
 
-    # Apply grammar rules
-    corrected_words = grammar_fix(corrected_words)
+    # basic grammar fix
+    if len(corrected_words) > 1:
+        if corrected_words[0].lower() == "he" and corrected_words[1] == "don't":
+            corrected_words[1] = "doesn't"
 
     corrected_sentence = " ".join(corrected_words)
+    corrected_sentence = corrected_sentence.capitalize()
 
     total = len(words)
     correct = total - wrong
-    score = int((correct / total) * 100) if total > 0 else 100
+    score = int((correct / total) * 100) if total > 0 else 0
+
+    return corrected_sentence, wrong, correct, total, score
+
+
+@app.get("/")
+def home():
+    return {"message": "Backend running 🚀"}
+
+
+@app.post("/correct")
+def correct_text(data: TextIn):
+    corrected, wrong, correct, total, score = simple_correct(data.text)
 
     return {
-        "original": text,
-        "corrected": corrected_sentence.capitalize(),
+        "original": data.text,
+        "corrected": corrected,
         "wrong_words": wrong,
         "correct_words": correct,
         "total_words": total,
         "score": score
     }
-
-# -----------------------------
-# API
-# -----------------------------
-@app.post("/correct")
-def correct_text(data: TextIn):
-    return process_text(data.text)
