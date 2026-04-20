@@ -1,5 +1,6 @@
 fastapi
 uvicorn
 pydantic
-textblob
-nltk
+transformers
+torch
+sentencepiece
