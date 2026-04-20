@@ -4,8 +4,8 @@ import language_tool_python
 
 app = FastAPI()
 
-# Use PUBLIC API (important for Render)
-tool = language_tool_python.LanguageToolPublicAPI('en-US')
+# ✅ OFFLINE TOOL (NO RATE LIMIT)
+tool = language_tool_python.LanguageTool('en-US')
 
 
 class TextIn(BaseModel):
@@ -14,7 +14,7 @@ class TextIn(BaseModel):
 
 @app.get("/")
 def home():
-    return {"message": "Grammarly Ultra AI is running 🚀"}
+    return {"message": "Grammarly Ultra Backend Running 🚀"}
 
 
 @app.post("/correct")
@@ -22,26 +22,18 @@ def correct_text(data: TextIn):
     text = data.text
 
     matches = tool.check(text)
+    corrected_text = language_tool_python.utils.correct(text, matches)
 
-    corrected = text
+    words = text.split()
+    total_words = len(words)
     wrong_words = len(matches)
+    correct_words = max(total_words - wrong_words, 0)
 
-    # Apply corrections
-    for match in reversed(matches):
-        if match.replacements:
-            corrected = (
-                corrected[:match.offset] +
-                match.replacements[0] +
-                corrected[match.offset + match.errorLength:]
-            )
-
-    total_words = len(text.split())
-    correct_words = total_words - wrong_words
-    score = int((correct_words / total_words) * 100) if total_words > 0 else 100
+    score = int((correct_words / total_words) * 100) if total_words > 0 else 0
 
     return {
         "original": text,
-        "corrected": corrected,
+        "corrected": corrected_text,
         "wrong_words": wrong_words,
         "correct_words": correct_words,
         "total_words": total_words,
