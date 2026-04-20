@@ -1,28 +1,49 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from core import rewrite_engine, score_engine
+import language_tool_python
 
 app = FastAPI()
+
+# Use PUBLIC API (important for Render)
+tool = language_tool_python.LanguageToolPublicAPI('en-US')
 
 
 class TextIn(BaseModel):
     text: str
 
 
+@app.get("/")
+def home():
+    return {"message": "Grammarly Ultra AI is running 🚀"}
+
+
 @app.post("/correct")
-def correct(data: TextIn):
+def correct_text(data: TextIn):
+    text = data.text
 
-    original = data.text
+    matches = tool.check(text)
 
-    corrected = rewrite_engine(original)
+    corrected = text
+    wrong_words = len(matches)
 
-    wrong, correct_w, total, score = score_engine(original, corrected)
+    # Apply corrections
+    for match in reversed(matches):
+        if match.replacements:
+            corrected = (
+                corrected[:match.offset] +
+                match.replacements[0] +
+                corrected[match.offset + match.errorLength:]
+            )
+
+    total_words = len(text.split())
+    correct_words = total_words - wrong_words
+    score = int((correct_words / total_words) * 100) if total_words > 0 else 100
 
     return {
-        "original": original,
+        "original": text,
         "corrected": corrected,
-        "wrong_words": wrong,
-        "correct_words": correct_w,
-        "total_words": total,
+        "wrong_words": wrong_words,
+        "correct_words": correct_words,
+        "total_words": total_words,
         "score": score
     }
