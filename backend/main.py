@@ -2,10 +2,11 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from transformers import pipeline
+import difflib
 
 app = FastAPI()
 
-# ✅ CORS (required)
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -14,10 +15,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ✅ Load REAL AI model (one time at startup)
+# 🔥 Better AI model
 corrector = pipeline(
     "text2text-generation",
-    model="vennify/t5-base-grammar-correction"
+    model="pszemraj/flan-t5-large-grammar-synthesis"
 )
 
 class TextIn(BaseModel):
@@ -33,24 +34,19 @@ def home():
 def correct_text(data: TextIn):
     text = data.text
 
-    # 🔥 AI correction
+    # AI correction
     result = corrector(text, max_length=128)
     corrected = result[0]["generated_text"]
 
-    # scoring
-    words = text.split()
-    corrected_words = corrected.split()
+    # Capitalize
+    corrected = corrected[:1].upper() + corrected[1:]
 
-    correct_count = sum(1 for a, b in zip(words, corrected_words) if a == b)
-    total = len(words)
-    wrong = total - correct_count
-    score = int((correct_count / total) * 100) if total > 0 else 0
+    # 🔥 SMART scoring (similarity)
+    similarity = difflib.SequenceMatcher(None, text, corrected).ratio()
+    score = int(similarity * 100)
 
     return {
         "original": text,
         "corrected": corrected,
-        "wrong_words": wrong,
-        "correct_words": correct_count,
-        "total_words": total,
         "score": score
     }
