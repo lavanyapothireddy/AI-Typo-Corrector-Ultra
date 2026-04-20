@@ -1,42 +1,25 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Grammarly AI Clone</title>
+    <meta charset="UTF-8">
+    <title>AI Typo Corrector Ultra</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<div class="app">
+<div class="container">
+    <h1>🧠 AI Typo Corrector Ultra</h1>
 
-    <h1>🧠 Grammarly AI Clone</h1>
+    <textarea id="inputText" placeholder="Enter your sentence..."></textarea>
 
-    <div class="container">
+    <button onclick="checkGrammar()">Check Grammar</button>
 
-        <div class="left">
-            <h3>Input</h3>
-            <textarea id="inputText" placeholder="Type your text..."></textarea>
-
-            <button onclick="analyze()">Analyze</button>
-        </div>
-
-        <div class="right">
-            <h3>Corrected Output</h3>
-            <div id="output"></div>
-
-            <div class="stats">
-                <p>❌ Wrong: <span id="wrong"></span></p>
-                <p>✅ Correct: <span id="correct"></span></p>
-                <p>📊 Total: <span id="total"></span></p>
-                <p>🧠 Score: <span id="score"></span>/100</p>
-            </div>
-        </div>
-
+    <div id="outputBox">
+        <p id="outputText">✍️ Corrected text will appear here...</p>
+        <p id="score">📊 Score: --</p>
     </div>
-
 </div>
 
 <script src="script.js"></script>
-
 </body>
 </html>
