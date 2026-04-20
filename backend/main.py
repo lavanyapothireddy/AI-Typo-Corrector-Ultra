@@ -1,15 +1,11 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-from textblob import TextBlob
-import nltk
-
-# ✅ force download (important for Render)
-nltk.download('punkt')
+from transformers import pipeline
 
 app = FastAPI()
 
-# CORS fix
+# ✅ CORS (required)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -18,51 +14,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ✅ Load REAL AI model (one time at startup)
+corrector = pipeline(
+    "text2text-generation",
+    model="vennify/t5-base-grammar-correction"
+)
+
 class TextIn(BaseModel):
     text: str
 
 
 @app.get("/")
 def home():
-    return {"message": "Backend running 🚀"}
-
-
-# 🔥 fallback grammar fixes (rule-based boost)
-def basic_fix(text):
-    fixes = {
-        "dont": "don't",
-        "cant": "can't",
-        "wont": "won't",
-        "im": "I'm",
-        "i ": "I ",
-        "apple": "apples"  # simple plural fix
-    }
-    words = text.split()
-    new_words = []
-
-    for w in words:
-        lw = w.lower()
-        if lw in fixes:
-            new_words.append(fixes[lw])
-        else:
-            new_words.append(w)
-
-    return " ".join(new_words)
+    return {"message": "AI Grammar Backend Running 🚀"}
 
 
 @app.post("/correct")
 def correct_text(data: TextIn):
     text = data.text
 
-    # Step 1: TextBlob correction
-    blob = TextBlob(text)
-    corrected = str(blob.correct())
-
-    # Step 2: fallback improvement
-    corrected = basic_fix(corrected)
-
-    # Step 3: Capitalize first letter
-    corrected = corrected[:1].upper() + corrected[1:]
+    # 🔥 AI correction
+    result = corrector(text, max_length=128)
+    corrected = result[0]["generated_text"]
 
     # scoring
     words = text.split()
