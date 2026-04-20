@@ -1,5 +1,4 @@
 fastapi
 uvicorn
+language-tool-python
 pydantic
-requests
-wordfreq
