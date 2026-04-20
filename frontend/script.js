@@ -1,21 +1,38 @@
-async function analyze() {
+const API_URL = "https://ai-typo-corrector-ultra.onrender.com/correct";
 
+async function checkGrammar() {
     const text = document.getElementById("inputText").value;
+    const output = document.getElementById("output");
+    const scoreBox = document.getElementById("score");
 
-    const res = await fetch("https://ai-typo-corrector-ultra.onrender.com/correct", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ text })
-    });
+    if (!text.trim()) {
+        output.innerText = "⚠️ Please enter text";
+        return;
+    }
 
-    const data = await res.json();
+    output.innerText = "⏳ Checking...";
+    scoreBox.innerText = "";
 
-    document.getElementById("output").innerText = data.corrected;
+    try {
+        const res = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ text: text })
+        });
 
-    document.getElementById("wrong").innerText = data.wrong_words;
-    document.getElementById("correct").innerText = data.correct_words;
-    document.getElementById("total").innerText = data.total_words;
-    document.getElementById("score").innerText = data.score;
+        const data = await res.json();
+
+        if (data.error) {
+            output.innerText = "❌ Error: " + data.error;
+            return;
+        }
+
+        output.innerText = data.corrected;
+        scoreBox.innerText = `📊 Score: ${data.score}/100`;
+
+    } catch (err) {
+        output.innerText = "❌ Backend not responding";
+    }
 }
