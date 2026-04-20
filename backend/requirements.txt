@@ -1,4 +1,3 @@
 fastapi
 uvicorn
-language-tool-python
 pydantic
