@@ -1,0 +1,180 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Typo Corrector Ultra</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- BACKGROUND -->
+  <div class="bg-wrap" aria-hidden="true">
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+    <div class="bg-grid"></div>
+  </div>
+
+  <div class="app">
+
+    <!-- ── HEADER ─────────────────────────────── -->
+    <header class="topbar">
+      <div class="topbar-brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="36" height="36" rx="10" fill="url(#bg)"/>
+            <path d="M10 18h16M18 10l8 8-8 8" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <defs>
+              <linearGradient id="bg" x1="0" y1="0" x2="36" y2="36">
+                <stop stop-color="#0ea5e9"/><stop offset="1" stop-color="#6366f1"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-name">AI Typo Corrector <span class="brand-ultra">Ultra</span></h1>
+          <p class="brand-sub">Powered by Groq · llama-3.3-70b-versatile</p>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="model-chip">
+          <span class="chip-dot"></span>
+          ⚡ Groq · llama-3.3-70b
+        </div>
+      </div>
+    </header>
+
+    <!-- ── STATUS BAR ─────────────────────────── -->
+    <div class="statusbar">
+      <div class="status-left">
+        <span class="status-dot" id="statusDot"></span>
+        <span class="status-text" id="statusText">Ready — paste your text and click Correct Now</span>
+      </div>
+      <div class="status-right">
+        <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to correct
+      </div>
+    </div>
+
+    <!-- ── EDITOR ──────────────────────────────── -->
+    <main class="editor-area">
+
+      <!-- INPUT -->
+      <section class="panel input-panel">
+        <div class="panel-header">
+          <span class="panel-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            Your Text
+          </span>
+          <button class="ghost-btn" id="clearBtn">✕ Clear</button>
+        </div>
+        <div class="panel-body">
+          <textarea
+            id="inputText"
+            class="editor-textarea"
+            placeholder="Type or paste your text here with any mistakes...&#10;&#10;"
+            spellcheck="false"
+          ></textarea>
+        </div>
+        <div class="panel-footer">
+          <span class="meta-info" id="inputMeta">0 words · 0 chars</span>
+          <button class="correct-btn" id="correctBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Correct Now
+          </button>
+        </div>
+      </section>
+
+      <!-- ARROW -->
+      <div class="arrow-col">
+        <div class="arrow-ring" id="arrowRing">
+          <svg id="arrowSvg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+      </div>
+
+      <!-- OUTPUT -->
+      <section class="panel output-panel">
+        <div class="panel-header">
+          <span class="panel-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Corrected Text
+          </span>
+          <div class="panel-header-right">
+            <span class="badge" id="badge" style="display:none"></span>
+            <button class="ghost-btn" id="copyBtn">⎘ Copy</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="output-box" id="outputBox">
+            <div class="empty-state">
+              <div class="empty-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              </div>
+              <p class="empty-title">Corrected text appears here</p>
+              <p class="empty-hint">Enter text on the left → click <strong>Correct Now</strong></p>
+            </div>
+          </div>
+        </div>
+        <div class="panel-footer">
+          <span class="meta-info" id="outputMeta">—</span>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ── ERROR ───────────────────────────────── -->
+    <div class="error-bar" id="errorBar" style="display:none">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="errorMsg"></span>
+      <button class="err-close" id="errClose">✕</button>
+    </div>
+
+    <!-- ── CHANGES ─────────────────────────────── -->
+    <section class="changes-section" id="changesSection" style="display:none">
+      <div class="changes-header">
+        <div class="changes-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+          What Was Fixed
+        </div>
+        <span class="changes-count" id="changesCount"></span>
+      </div>
+      <div class="changes-summary" id="changesSummary"></div>
+      <div class="changes-grid" id="changesGrid"></div>
+    </section>
+
+    <!-- ── FOOTER ──────────────────────────────── -->
+    <footer class="app-footer">
+      <span>AI Typo Corrector Ultra</span>
+      <span class="fdot">·</span>
+      <span>Groq · llama-3.3-70b-versatile</span>
+    </footer>
+
+  </div>
+
+  <!-- LOADER -->
+  <div class="loader-overlay" id="loaderOverlay" style="display:none">
+    <div class="loader-card">
+      <div class="loader-ring">
+        <svg viewBox="0 0 50 50">
+          <circle cx="25" cy="25" r="20" fill="none" stroke="url(#lg)" stroke-width="4"
+            stroke-linecap="round" stroke-dasharray="100 26"/>
+          <defs>
+            <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#0ea5e9"/>
+              <stop offset="100%" stop-color="#6366f1"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <p class="loader-msg" id="loaderMsg">Analyzing your text...</p>
+      <div class="loader-bar"><div class="loader-fill"></div></div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
