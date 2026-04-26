@@ -8,7 +8,7 @@
 
 /* ── ⚙️  CONFIG — Your Groq API Key is hardcoded here ── */
 // ⚠️ DO NOT hardcode your key here — use Render Environment Variables
-const GROQ_API_KEY = window.__GROQ_KEY__ || '';
+const GROQ_API_KEY = 'GROQ_KEY_PLACEHOLDER';
 const GROQ_MODEL   = 'llama-3.3-70b-versatile';
 const GROQ_URL     = 'https://api.groq.com/openai/v1/chat/completions';
 
