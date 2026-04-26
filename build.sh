@@ -1,4 +1,4 @@
 #!/bin/bash
-# Replace placeholder in app.js with the real key from environment
-sed -i "s|window.__GROQ_KEY__ || ''|'$GROQ_API_KEY'|g" js/app.js
-echo "✅ API key injected successfully"
+echo "Injecting API key..."
+sed -i "s/GROQ_KEY_PLACEHOLDER/$GROQ_API_KEY/g" js/app.js
+echo "✅ Done"
